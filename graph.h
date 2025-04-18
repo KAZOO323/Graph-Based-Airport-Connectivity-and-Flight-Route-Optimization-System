@@ -15,6 +15,8 @@ private:
 
     struct Vertex { // Represents airports
         std::string airportCode;
+        std::string city;
+        std::string state;
         std::vector<Edge> adjacencyList;
     };
     
@@ -22,7 +24,7 @@ private:
     std::vector<Vertex> vertices;
 
 public: // See implementation file for details
-    void addAirport(const std::string& code);
+    void addAirport(const std::string& code, const std::string& state);
     void addFlight(const std::string& origin, const std::string& dest, int distance, int cost);
     int getAirportIndex(const std::string& code) const;
     void printGraph() const;

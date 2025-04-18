@@ -4,13 +4,15 @@ using namespace std;
 
 // Graph methods
 // Adds an airport to the graph (vertex object)
-void Graph::addAirport(const std::string& code) {
+void Graph::addAirport(const std::string& code, const std::string& state) {
     for (const auto& vertex : vertices) { // Check to see if airport code already exists in graph
         if (vertex.airportCode == code) return;
     }
-    // Create new vertex, set airport code, and add it to vertices vector
+    
+    // Create new vertex, set airport code & state, and add it to vertices vector
     Vertex newVertex;
     newVertex.airportCode = code;
+    newVertex.state = state;
     vertices.push_back(newVertex);
 }
 
@@ -39,7 +41,7 @@ int Graph::getAirportIndex(const std::string& code) const {
 // Prints graph for debugging
 void Graph::printGraph() const {
     for (const auto& vertex : vertices) {
-        std::cout << "Airport: " << vertex.airportCode << std::endl;
+        std::cout << "Airport: " << vertex.airportCode << ", State: " << vertex.state << std::endl;
         for (const auto& edge : vertex.adjacencyList) {
             std::cout << "  -> " << vertices[edge.destIndex].airportCode
                       << " (Dist: " << edge.distance << ", Cost: " << edge.cost << ")" << std::endl;
