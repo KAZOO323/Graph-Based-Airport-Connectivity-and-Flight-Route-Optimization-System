@@ -1,6 +1,8 @@
 #include "graph.h"
 #include <iostream>
+using namespace std;
 
+// Graph methods
 // Adds an airport to the graph (vertex object)
 void Graph::addAirport(const std::string& code) {
     for (const auto& vertex : vertices) { // Check to see if airport code already exists in graph
@@ -48,4 +50,90 @@ void Graph::printGraph() const {
 // Returns graph vertices
 const std::vector<Graph::Vertex>& Graph::getVertices() const {
     return vertices;
+}
+
+// Calculates the shortest path between the given origin and destination airports (dijkstra's algorithm)
+void Graph::shortestPath(const std::string& origin, const std::string& destination) const {
+    // Get source and destination airport index
+    int i_src = getAirportIndex(origin);
+    int i_dest = getAirportIndex(destination);
+    
+    // Index validation
+    if (i_src == -1 || i_dest == -1) {
+        throw std::string("Shortest path: incorrect vertices"); 
+    }
+
+    // Initial distances
+    std::vector<int> distances(vertices.size(), std::numeric_limits<int>::max());
+    std::vector<bool> visited(vertices.size(), false);
+    std::vector<int> prev(vertices.size(), -1);
+    distances[i_src] = 0;
+    int cur = i_src;
+    int visited_count = 0;
+
+    // Visit all vertices
+    while (visited_count < vertices.size()) {
+        int i = cur;
+
+        for (const auto& edge : vertices[i].adjacencyList) {
+            int neighbor = edge.destIndex;
+            if (!visited[neighbor]) {
+                int alt = distances[i] + edge.distance;
+                if (alt < distances[neighbor]) {
+                    distances[neighbor] = alt;
+                    prev[neighbor] = i;
+                }
+            }
+        }
+
+        // Find the next closest unvisited vertex
+        int minDist = std::numeric_limits<int>::max();
+        cur = -1;
+        for (int j = 0; j < vertices.size(); j++) {
+            if (!visited[j] && distances[j] < minDist) {
+                minDist = distances[j];
+                cur = j;
+            }
+        }
+
+        if (cur == -1) break; // No valid vertex, break loop
+
+        visited[cur] = true;
+        visited_count++;
+    }
+
+    // No path available
+    if (distances[i_dest] == std::numeric_limits<int>::max()) {
+        std::cout << "Shortest route from " << origin << " to " << destination << ": " << "None" << std::endl;
+        return;
+    }
+
+    // Retrace path
+    std::vector<int> path;
+    for (int at = i_dest; at != -1; at = prev[at]) {
+        path.insert(path.begin(), at);
+    }
+    
+    // Calculate cost
+    int routeCost = 0;
+    for (size_t i = 0; i < path.size() - 1; ++i) {
+        int from = path[i];
+        int to = path[i + 1];
+        for (const auto& edge : vertices[from].adjacencyList) {
+            if (edge.destIndex == to) {
+                routeCost += edge.cost;
+                break;
+            }
+        }
+    }
+    
+    // Output shortest route
+    std::cout << "Shortest route from " << origin << " to " << destination << ": ";
+    for (size_t i = 0; i < path.size(); ++i) {
+        std::cout << vertices[path[i]].airportCode;
+        if (i != path.size() - 1) std::cout << " -> ";
+    }
+    // Output distance and cost
+    std::cout << ". The length is " << distances[i_dest] << ".";
+    std::cout << " The cost is " << routeCost << "." << std::endl;
 }

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <limits>
 
 class Graph {
 private:
@@ -26,6 +27,7 @@ public: // See implementation file for details
     int getAirportIndex(const std::string& code) const;
     void printGraph() const;
     const std::vector<Vertex>& getVertices() const;
+    void shortestPath(const std::string& origin, const std::string& destination) const;
 };
 
 #endif

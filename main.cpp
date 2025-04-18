@@ -60,6 +60,8 @@ int main() {
     loadTXT("airports.txt", g);
 
     g.printGraph();
+    std::cout << std::endl;
+    g.shortestPath("ATL", "AFW");
 
     return 0;
 }
