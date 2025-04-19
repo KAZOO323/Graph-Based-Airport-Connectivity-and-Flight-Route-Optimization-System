@@ -207,7 +207,6 @@ void Graph::shortestPathsToState(const std::string& origin, const std::string& s
     
     // Print routes
     std::cout << "Shortest path from " << origin << " to " << state << " state airports are:" << endl;
-
     bool pathFound = false;
     for (int dst = 0; dst < vertices.size(); ++dst) {
         if (distances[dst] == std::numeric_limits<int>::max()) continue;
@@ -259,7 +258,7 @@ void Graph::shortestPathWithStops(const std::string& origin, const std::string& 
         return;
     }
     
-    // Node structure (queue) (change to use the given in header later)
+    // BFS node structure
     struct Node {
         int index;
         int distance;
@@ -267,49 +266,105 @@ void Graph::shortestPathWithStops(const std::string& origin, const std::string& 
         int stops;
         std::vector<int> path;
     };
-    // Create and prepare queue and vector
+    // Create and prepare queue, path, cost
     std::vector<Node> queue;
     queue.push_back({src, 0, 0, 0, {src}});
     int minDistance = std::numeric_limits<int>::max();
-    std::vector<int> bestPath;
-    int bestCost = 0;
+    std::vector<int> Path;
+    int Cost = 0;
     
-    // Populate bestpath
+    // Populate path (BFS Traversal)
     while (!queue.empty()) {
+        // Dequeue front
         Node node = queue.front();
         queue.erase(queue.begin());
-
+        
+        // Destination reached with stops requirement
         if (node.index == dst && node.stops == stops+1) { // stops+1 is a really hacky bandage for my awful logic but it functions
             if (node.distance < minDistance) {
                 minDistance = node.distance;
-                bestPath = node.path;
-                bestCost = node.cost;
+                Path = node.path;
+                Cost = node.cost;
             }
             continue; // path found
         }
         
         if (node.stops >= stops+1) continue;
-
+        
+        // Traverse adjacent
         for (const auto& edge : vertices[node.index].adjacencyList) {
             std::vector<int> newPath = node.path;
             newPath.push_back(edge.destIndex);
-            queue.push_back({edge.destIndex, node.distance + edge.distance, node.cost + edge.cost, node.stops + 1, newPath});
+            queue.push_back({
+                edge.destIndex, 
+                node.distance + edge.distance, 
+                node.cost + edge.cost, 
+                node.stops + 1, 
+                newPath
+                
+            });
         }
     }
 
-    // Print path
+    // Print results
     std::cout << "Shortest path from " << origin << " to " << destination << " with " << stops << " stops: ";
     
     // No path found
-    if (bestPath.empty()) {
+    if (Path.empty()) {
         std::cout << "N/A" << std::endl;
         return;
     }
     
     // Path found; print path
-    for (size_t i = 0; i < bestPath.size(); ++i) {
-        std::cout << vertices[bestPath[i]].airportCode;
-        if (i != bestPath.size() - 1) std::cout << " -> ";
+    for (size_t i = 0; i < Path.size(); ++i) {
+        std::cout << vertices[Path[i]].airportCode;
+        if (i != Path.size() - 1) std::cout << " -> ";
     }
-    std::cout << ". The length is " << minDistance << ". The cost is " << bestCost << std::endl;
+    std::cout << ". The length is " << minDistance << ". The cost is " << Cost << std::endl;
+}
+
+// Gathers and prints total direct flight connections for each airport, descending order
+void Graph::printFlightConnections() const {
+    std::vector<int> inboundCount(vertices.size(), 0); // Inbound connections
+    std::vector<std::pair<std::string, int>> connectionData; // Airport codes & their connections
+    
+    // Calculate inbound connections
+    for (int i = 0; i < vertices.size(); ++i) {
+        for (int j = 0; j < vertices[i].adjacencyList.size(); ++j) {
+            int dest = vertices[i].adjacencyList[j].destIndex;
+            if (dest >= 0 && dest < vertices.size()) {
+                inboundCount[dest]++;
+            }
+        }
+    }
+    
+    // Calculate outbound connections, add to inbound for total
+    for (int i = 0; i < vertices.size(); ++i) {
+        int outbound = vertices[i].adjacencyList.size();
+        int inbound = inboundCount[i];
+        int total = outbound + inbound;
+        connectionData.push_back({vertices[i].airportCode, total});
+    }
+
+    // Sort descending
+    for (int i = 0; i < connectionData.size() - 1; ++i) {
+        int maxIdx = i;
+        for (int j = i + 1; j < connectionData.size(); ++j) {
+            if (connectionData[j].second > connectionData[maxIdx].second) {
+                maxIdx = j;
+            }
+        }
+        if (maxIdx != i) {
+            std::pair<std::string, int> temp = connectionData[i];
+            connectionData[i] = connectionData[maxIdx];
+            connectionData[maxIdx] = temp;
+        }
+    }
+    
+    // Print each airport and their total connections
+    std::cout << "Airport | Connections" << std::endl;
+    std::cout << "---------------------" << std::endl;
+    for (int i = 0; i < connectionData.size(); ++i) {
+        std::cout << connectionData[i].first << "     | " << connectionData[i].second << std::endl;
+    }
 }

@@ -48,6 +48,8 @@ public: // See implementation file for details
     void shortestPath(const std::string& origin, const std::string& destination) const;
     void shortestPathsToState(const std::string& origin, const std::string& state) const;
     void shortestPathWithStops(const std::string& origin, const std::string& destination, int maxStops) const;
+    
+    void printFlightConnections() const;
 };
 
 #endif

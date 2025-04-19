@@ -2,7 +2,6 @@
 #include <sstream>
 #include <iostream>
 #include "graph.h"
-#include "airport.h"
 #include <string>
 
 // Loads a given text file into a given graph object. OnlineGDB does not recognize .csv files, so this will have to do.
@@ -74,5 +73,8 @@ int main() {
     g.shortestPathsToState("ATL", "FL");
     std::cout << std::endl;
     g.shortestPathWithStops("IAD", "MIA", 3);
+    std::cout << std::endl;
+    g.printFlightConnections();
+    
     return 0;
 }
