@@ -30,6 +30,7 @@ public: // See implementation file for details
     void printGraph() const;
     const std::vector<Vertex>& getVertices() const;
     void shortestPath(const std::string& origin, const std::string& destination) const;
+    void shortestPathsToState(const std::string& origin, const std::string& state) const;
 };
 
 #endif

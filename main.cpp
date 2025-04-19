@@ -71,6 +71,7 @@ int main() {
     std::cout << std::endl;
     g.shortestPath("ATL", "AFW");
     std::cout << std::endl;
+    g.shortestPathsToState("ATL", "FL");
 
     return 0;
 }

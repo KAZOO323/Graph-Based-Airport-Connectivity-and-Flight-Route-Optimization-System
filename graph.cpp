@@ -54,7 +54,7 @@ const std::vector<Graph::Vertex>& Graph::getVertices() const {
     return vertices;
 }
 
-// Calculates the shortest path between the given origin and destination airports (dijkstra's algorithm)
+// Calculates and prints the shortest path between the given origin and destination airports (dijkstra's algorithm)
 void Graph::shortestPath(const std::string& origin, const std::string& destination) const {
     // Get source and destination airport index
     int i_src = getAirportIndex(origin);
@@ -106,7 +106,7 @@ void Graph::shortestPath(const std::string& origin, const std::string& destinati
 
     // No path available
     if (distances[i_dest] == std::numeric_limits<int>::max()) {
-        std::cout << "Shortest route from " << origin << " to " << destination << ": " << "None" << std::endl;
+        std::cout << "Shortest route from " << origin << " to " << destination << ": " << "N/A" << std::endl;
         return;
     }
 
@@ -138,4 +138,97 @@ void Graph::shortestPath(const std::string& origin, const std::string& destinati
     // Output distance and cost
     std::cout << ". The length is " << distances[i_dest] << ".";
     std::cout << " The cost is " << routeCost << "." << std::endl;
+}
+
+// Calculates and prints all shortest paths between the given origin airport and all destination airports in a given state (dijkstra's algorithm)
+void Graph::shortestPathsToState(const std::string& origin, const std::string& state) const {
+    // Get source airport index
+    int src = getAirportIndex(origin);
+    
+    // Index validation
+    if (src == -1) {
+        std::cout << "Invalid origin airport." << std::endl;
+        return;
+    }
+    
+    // Initial distances
+    std::vector<int> distances(vertices.size(), std::numeric_limits<int>::max());
+    std::vector<bool> visited(vertices.size(), false);
+    std::vector<int> prev(vertices.size(), -1);
+    distances[src] = 0;
+    int cur = src;
+    int visited_count = 0;
+    
+    // Visit all vertices
+    while (visited_count < vertices.size()) {
+        int i = cur;
+
+        for (const auto& edge : vertices[i].adjacencyList) {
+            int neighbor = edge.destIndex;
+            if (!visited[neighbor]) {
+                int alt = distances[i] + edge.distance;
+                if (alt < distances[neighbor]) {
+                    distances[neighbor] = alt;
+                    prev[neighbor] = i;
+                }
+            }
+        }
+        
+        // Find the next closest unvisited vertex
+        int minDist = std::numeric_limits<int>::max();
+        cur = -1;
+        for (int j = 0; j < vertices.size(); j++) {
+            if (!visited[j] && distances[j] < minDist) {
+                minDist = distances[j];
+                cur = j;
+            }
+        }
+
+        if (cur == -1) break; // No valid vertex, break loop
+
+        visited[cur] = true;
+        visited_count++;
+    }
+    
+    // Print routes
+    std::cout << "Shortest path from " << origin << " to " << state << " state airports are:" << endl;
+
+    bool pathFound = false;
+    for (int dst = 0; dst < vertices.size(); ++dst) {
+        if (distances[dst] == std::numeric_limits<int>::max()) continue;
+
+        if (vertices[dst].state != state) continue;
+
+        pathFound = true;
+        std::vector<int> path;
+        for (int at = dst; at != -1; at = prev[at]) {
+            path.insert(path.begin(), at);
+        }
+        
+        // Calculate route cost
+        int totalCost = 0;
+        for (size_t i = 0; i < path.size() - 1; ++i) {
+            int from = path[i];
+            int to = path[i + 1];
+            for (const auto& edge : vertices[from].adjacencyList) {
+                if (edge.destIndex == to) {
+                    totalCost += edge.cost;
+                    break;
+                }
+            }
+        }
+        
+        // Print route
+        for (size_t j = 0; j < path.size(); ++j) {
+            std::cout << vertices[path[j]].airportCode;
+            if (j != path.size() - 1) std::cout << " -> ";
+        }
+        // Print distance and cost of route
+        std::cout << " | Length = " << distances[dst] << ", Cost = " << totalCost << std::endl;
+    }
+    
+    // No paths found
+    if (!pathFound) {
+        std::cout << "N/A" << std::endl;
+    }
 }
