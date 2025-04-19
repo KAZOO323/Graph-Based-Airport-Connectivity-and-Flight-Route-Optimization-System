@@ -368,3 +368,160 @@ void Graph::printFlightConnections() const {
         std::cout << connectionData[i].first << "     | " << connectionData[i].second << std::endl;
     }
 }
+
+// Undirected Graph methods
+// Constructor
+Graph Graph::createUndirectedGraph() const {
+    Graph undirectedGraph;
+
+    // Copy vertexes (airports) to new graph
+    for (const auto& vertex : vertices) {
+        undirectedGraph.addAirport(vertex.airportCode, vertex.state);
+    }
+    
+    // Iterate through edges (flights)
+    for (int u = 0; u < vertices.size(); ++u) {
+        for (const auto& edge : vertices[u].adjacencyList) {
+            int v = edge.destIndex;
+            
+            // Look for reverse edge
+            int reverseCost = -1;
+            for (const auto& revEdge : vertices[v].adjacencyList) {
+                if (revEdge.destIndex == u) {
+                    reverseCost = revEdge.cost;
+                    break;
+                }
+            }
+
+            if (u < v) { // Avoid duplicates
+                // Use smaller cost as undirected edge, otherwise just use edge.cost
+                int minCost = (reverseCost != -1) ? std::min(edge.cost, reverseCost) : edge.cost;
+                undirectedGraph.addFlight(vertices[u].airportCode, vertices[v].airportCode, 0, minCost);
+                undirectedGraph.addFlight(vertices[v].airportCode, vertices[u].airportCode, 0, minCost);
+            }
+        }
+    }
+
+    return undirectedGraph;
+}
+
+// Creates an MST using Prim's algorithm on an undirected graph.
+// Note: The given airport data always creates a disconnected graph, meaning this will never actually work.
+void Graph::primMST() const {
+    // Empty graphs can't make MSTs
+    if (vertices.empty()) {
+        std::cout << "Graph is empty. MST cannot be formed." << std::endl;
+        return;
+    }
+
+    int n = vertices.size();
+    std::vector<bool> inMST(n, false); // Track presence in MST
+    std::vector<int> parent(n, -1); // Store parents of each vertex
+    std::vector<int> key(n, std::numeric_limits<int>::max()); // Minimum cost for each vertex
+    key[0] = 0;
+    
+    // Construct MST
+    for (int count = 0; count < n - 1; ++count) {
+        int u = -1;
+        int minKey = std::numeric_limits<int>::max();
+        for (int v = 0; v < n; ++v) { // Prioritize smaller keys
+            if (!inMST[v] && key[v] < minKey) {
+                minKey = key[v];
+                u = v;
+            }
+        }
+
+        if (u == -1) { // Graph is disconnected, can't build MST
+            std::cout << "Disconnected graph; primMST cannot be built" << std::endl;
+            return;
+        }
+
+        inMST[u] = true; // Mark selected vertex as being in MST
+        
+        // Update key and parent for adj.
+        for (const auto& edge : vertices[u].adjacencyList) {
+            int v = edge.destIndex;
+            if (!inMST[v] && edge.cost < key[v]) {
+                key[v] = edge.cost;
+                parent[v] = u;
+            }
+        }
+    }
+    
+    // Print MST
+    int totalCost = 0;
+    std::cout << "Minimal Spanning Tree (Prim): " << std::endl;
+    for (int i = 1; i < n; ++i) {
+        if (parent[i] != -1) {
+            std::cout << vertices[parent[i]].airportCode << " - " << vertices[i].airportCode << " | Weight: " << key[i] << std::endl;
+            totalCost += key[i];
+        }
+    }
+    std::cout << "Total cost of MST: " << totalCost << std::endl;
+}
+
+// Creates an MST using Kruskal's algorithm on an undirected graph.
+void Graph::kruskalMST() const {
+    struct EdgeInfo { // Helper structure
+        int u;
+        int v;
+        int cost;
+    };
+    
+    // Get all edges
+    std::vector<EdgeInfo> allEdges;
+    for (int u = 0; u < vertices.size(); ++u) {
+        for (const auto& edge : vertices[u].adjacencyList) {
+            if (u < edge.destIndex) {
+                allEdges.push_back({u, edge.destIndex, edge.cost});
+            }
+        }
+    }
+
+    // Sort edges by cost
+    for (int i = 0; i < allEdges.size() - 1; ++i) {
+        int minIdx = i;
+        for (int j = i + 1; j < allEdges.size(); ++j) {
+            if (allEdges[j].cost < allEdges[minIdx].cost) {
+                minIdx = j;
+            }
+        }
+        if (minIdx != i) {
+            EdgeInfo temp = allEdges[i];
+            allEdges[i] = allEdges[minIdx];
+            allEdges[minIdx] = temp;
+        }
+    }
+    
+    // Union-find
+    std::vector<int> parent(vertices.size());
+    for (int i = 0; i < vertices.size(); ++i) {
+        parent[i] = i;
+    }
+    
+    // Find set root (helper)
+    auto find = [&](int x) {
+        while (x != parent[x]) x = parent[x];
+        return x;
+    };
+    
+    // Unite sets (helper)
+    auto unite = [&](int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
+        if (rootX == rootY) return false;
+        parent[rootY] = rootX;
+        return true;
+    };
+    
+    // Print MST
+    int totalCost = 0;
+    std::cout << "Minimal Spanning Tree (Kruskal): " << std::endl;
+    for (const auto& edge : allEdges) {
+        if (unite(edge.u, edge.v)) {
+            std::cout << vertices[edge.u].airportCode << " - " << vertices[edge.v].airportCode << " | Weight: " << edge.cost << std::endl;
+            totalCost += edge.cost;
+        }
+    }
+    std::cout << "Total cost of MST: " << totalCost << std::endl;
+}

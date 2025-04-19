@@ -40,6 +40,7 @@ private:
     std::vector<Vertex> vertices;
 
 public: // See implementation file for details
+    // Graph methods
     void addAirport(const std::string& code, const std::string& state);
     void addFlight(const std::string& origin, const std::string& dest, int distance, int cost);
     int getAirportIndex(const std::string& code) const;
@@ -48,8 +49,12 @@ public: // See implementation file for details
     void shortestPath(const std::string& origin, const std::string& destination) const;
     void shortestPathsToState(const std::string& origin, const std::string& state) const;
     void shortestPathWithStops(const std::string& origin, const std::string& destination, int maxStops) const;
-    
     void printFlightConnections() const;
+    
+    // Undirected Graph methods
+    Graph createUndirectedGraph() const;
+    void primMST() const;
+    void kruskalMST() const;
 };
 
 #endif

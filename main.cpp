@@ -64,17 +64,24 @@ void loadTXT(const std::string& filename, Graph& g) {
 int main() {
     Graph g;
 
-    loadTXT("airports.txt", g);
+    loadTXT("airports.txt", g); // 1)
 
     g.printGraph();
     std::cout << std::endl;
-    g.shortestPath("ATL", "AFW");
+    g.shortestPath("ATL", "AFW"); // 2)
     std::cout << std::endl;
-    g.shortestPathsToState("ATL", "FL");
+    g.shortestPathsToState("ATL", "FL"); // 3)
     std::cout << std::endl;
-    g.shortestPathWithStops("IAD", "MIA", 3);
+    g.shortestPathWithStops("IAD", "MIA", 3); // 4)
     std::cout << std::endl;
-    g.printFlightConnections();
+    g.printFlightConnections(); // 5)
+    std::cout << std::endl;
+    
+    Graph g_u = g.createUndirectedGraph(); // 6)
+    
+    g_u.primMST(); // 7)
+    std::cout << std::endl;
+    g_u.kruskalMST(); // 8)
     
     return 0;
 }
