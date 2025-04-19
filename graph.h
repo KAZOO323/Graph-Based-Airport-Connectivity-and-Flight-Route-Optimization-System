@@ -5,6 +5,22 @@
 #include <vector>
 #include <limits>
 
+class Queue {
+private:
+    struct Node {
+        int index;
+        int distance;
+        int cost;
+        int stops;
+        std::vector<int> path;
+    };
+    std::vector<Node> data;
+public:
+    void push(int index, int distance, int cost, int stops, const std::vector<int>& path);
+    Node pop();
+    bool empty() const;
+};
+
 class Graph {
 private:
     struct Edge { // Represents direct flights between airports
@@ -31,6 +47,7 @@ public: // See implementation file for details
     const std::vector<Vertex>& getVertices() const;
     void shortestPath(const std::string& origin, const std::string& destination) const;
     void shortestPathsToState(const std::string& origin, const std::string& state) const;
+    void shortestPathWithStops(const std::string& origin, const std::string& destination, int maxStops) const;
 };
 
 #endif

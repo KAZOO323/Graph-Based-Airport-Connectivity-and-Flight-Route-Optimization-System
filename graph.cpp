@@ -2,6 +2,21 @@
 #include <iostream>
 using namespace std;
 
+// Queue methods
+void Queue::push(int index, int distance, int cost, int stops, const std::vector<int>& path) {
+    data.push_back({index, distance, cost, stops, path});
+}
+
+Queue::Node Queue::pop() {
+    Node node = data.front();
+    data.erase(data.begin());
+    return node;
+}
+
+bool Queue::empty() const {
+    return data.empty();
+}
+
 // Graph methods
 // Adds an airport to the graph (vertex object)
 void Graph::addAirport(const std::string& code, const std::string& state) {
@@ -231,4 +246,70 @@ void Graph::shortestPathsToState(const std::string& origin, const std::string& s
     if (!pathFound) {
         std::cout << "N/A" << std::endl;
     }
+}
+
+// Calculates and prints the shortest path between the given origin and destination airport with a specified amount of stops
+void Graph::shortestPathWithStops(const std::string& origin, const std::string& destination, int stops) const {
+    // Get source and destination airport index
+    int src = getAirportIndex(origin);
+    int dst = getAirportIndex(destination);
+    // Index validation
+    if (src == -1 || dst == -1) {
+        std::cout << "Invalid airport codes." << std::endl;
+        return;
+    }
+    
+    // Node structure (queue) (change to use the given in header later)
+    struct Node {
+        int index;
+        int distance;
+        int cost;
+        int stops;
+        std::vector<int> path;
+    };
+    // Create and prepare queue and vector
+    std::vector<Node> queue;
+    queue.push_back({src, 0, 0, 0, {src}});
+    int minDistance = std::numeric_limits<int>::max();
+    std::vector<int> bestPath;
+    int bestCost = 0;
+    
+    // Populate bestpath
+    while (!queue.empty()) {
+        Node node = queue.front();
+        queue.erase(queue.begin());
+
+        if (node.index == dst && node.stops == stops+1) { // stops+1 is a really hacky bandage for my awful logic but it functions
+            if (node.distance < minDistance) {
+                minDistance = node.distance;
+                bestPath = node.path;
+                bestCost = node.cost;
+            }
+            continue; // path found
+        }
+        
+        if (node.stops >= stops+1) continue;
+
+        for (const auto& edge : vertices[node.index].adjacencyList) {
+            std::vector<int> newPath = node.path;
+            newPath.push_back(edge.destIndex);
+            queue.push_back({edge.destIndex, node.distance + edge.distance, node.cost + edge.cost, node.stops + 1, newPath});
+        }
+    }
+
+    // Print path
+    std::cout << "Shortest path from " << origin << " to " << destination << " with " << stops << " stops: ";
+    
+    // No path found
+    if (bestPath.empty()) {
+        std::cout << "N/A" << std::endl;
+        return;
+    }
+    
+    // Path found; print path
+    for (size_t i = 0; i < bestPath.size(); ++i) {
+        std::cout << vertices[bestPath[i]].airportCode;
+        if (i != bestPath.size() - 1) std::cout << " -> ";
+    }
+    std::cout << ". The length is " << minDistance << ". The cost is " << bestCost << std::endl;
 }
